@@ -1,8 +1,9 @@
 import 'package:connectinno_case_client/core/cache/i_cache_service.dart';
 import 'package:connectinno_case_client/core/cache/impl/hive_cache_service.dart';
+import 'package:connectinno_case_client/core/connectivity/i_connectivity_service.dart';
+import 'package:connectinno_case_client/core/connectivity/impl/connectivity_service.impl.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:hive_ce/hive.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
@@ -16,15 +17,26 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // Initialize connectivity
+  final connectivityService = ConnectivityServiceImpl();
+  // Perform the initial connectivity check before the app even runs.
+  await connectivityService.initialize();
+
   // Initialize Hive
   await Hive.initFlutter();
-  
+
   final notesBox = await Hive.openBox('favorites');
 
 
   runApp(
     MultiProvider(
       providers: [
+        // Connectivity service provider
+        ChangeNotifierProvider<IConnectivityService>(
+          create: (context) => connectivityService,
+        ),
+
+
         // Cache Providers
         Provider<ICacheService<NoteCache>>(create: (_) => HiveCacheService(notesBox)),
 
