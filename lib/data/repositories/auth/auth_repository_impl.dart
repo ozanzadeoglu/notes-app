@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import '../../domain/entities/user/user_entity.dart';
-import '../../domain/repositories/auth_repository.dart';
-import '../datasources/firebase_auth_datasource.dart';
+import '../../../domain/entities/user/user_entity.dart';
+import '../../../domain/repositories/auth/auth_repository.dart';
+import '../../datasources/auth/firebase_auth_datasource.dart';
 
 class AuthRepositoryImpl extends ChangeNotifier implements AuthRepository {
   final FirebaseAuthDataSource _firebaseAuthDataSource;

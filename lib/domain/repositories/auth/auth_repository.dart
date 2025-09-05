@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../entities/user/user_entity.dart';
+import '../../entities/user/user_entity.dart';
 
 abstract class AuthRepository extends ChangeNotifier {
   Future<UserEntity?> getCurrentUser();

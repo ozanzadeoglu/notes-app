@@ -1,5 +1,5 @@
-import '../../core/utils/result.dart';
-import '../entities/note/note.dart';
+import '../../../core/utils/result.dart';
+import '../../entities/note/note.dart';
 
 abstract class NoteRepository {
   /// Creates a new note

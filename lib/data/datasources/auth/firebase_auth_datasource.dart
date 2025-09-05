@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import '../models/user/user_model.dart';
+import '../../models/user/user_model.dart';
 
 abstract class FirebaseAuthDataSource {
   Future<UserModel?> getCurrentUser();
