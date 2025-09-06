@@ -2,6 +2,7 @@ import 'package:connectinno_case_client/core/utils/result.dart';
 
 class NoteCache{}
 class QueueCache{}
+class LastSyncCache{}
 
 /// Defines the contract for a generic key-value caching service.
 ///

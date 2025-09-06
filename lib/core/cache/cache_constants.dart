@@ -3,6 +3,7 @@ abstract final class CacheBoxNames {
   /// The box for storing notes.
   static const String notes = 'notesBox';
   static const String queue = 'queueBox';
+  static const String lastSyncDate = 'lastSyncDateBox';
 }
 
 /// Contains the type id's of all Hive classes used in application.
