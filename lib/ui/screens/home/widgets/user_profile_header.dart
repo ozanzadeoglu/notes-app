@@ -114,15 +114,46 @@ class _UserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CircleAvatar(
-      radius: 24,
-      backgroundColor: Colors.grey.shade300,
-      backgroundImage: currentUser?.photoUrl != null
-          ? NetworkImage(currentUser!.photoUrl!)
-          : null,
-      child: currentUser?.photoUrl == null
-          ? Icon(Icons.person, color: Colors.grey.shade600, size: 28)
-          : null,
+    return ClipOval(
+      child: SizedBox(
+        width: 48,
+        height: 48,
+        child: currentUser?.photoUrl != null
+            ? Image.network(
+                currentUser!.photoUrl!,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey.shade300,
+                    child: Icon(
+                      Icons.person,
+                      color: Colors.grey.shade600,
+                      size: 28,
+                    ),
+                  );
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    color: Colors.grey.shade300,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  );
+                },
+              )
+            : Container(
+                color: Colors.grey.shade300,
+                child: Icon(
+                  Icons.person,
+                  color: Colors.grey.shade600,
+                  size: 28,
+                ),
+              ),
+      ),
     );
   }
 }
