@@ -13,24 +13,18 @@ class ErrorSnackbar {
     final showRetryButton = ErrorMessages.shouldShowRetryButton(error);
 
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
+        persist: false,
         content: Row(
           children: [
-            Icon(
-              Icons.error_outline,
-              color: Colors.white,
-              size: 20,
-            ),
+            Icon(Icons.error_outline, color: Colors.white, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 errorMessage,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                ),
+                style: const TextStyle(color: Colors.white, fontSize: 14),
               ),
             ),
           ],
@@ -38,17 +32,19 @@ class ErrorSnackbar {
         backgroundColor: Colors.red.shade600,
         duration: duration,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         action: showRetryButton && onRetry != null
             ? SnackBarAction(
                 label: 'Retry',
                 textColor: Colors.white,
-                onPressed: onRetry,
+                onPressed: () {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  onRetry.call();
+                },
               )
-            : null,
+            : null
       ),
+
     );
   }
 
@@ -58,7 +54,7 @@ class ErrorSnackbar {
     Duration duration = const Duration(seconds: 2),
   }) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -72,10 +68,7 @@ class ErrorSnackbar {
             Expanded(
               child: Text(
                 message,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                ),
+                style: const TextStyle(color: Colors.white, fontSize: 14),
               ),
             ),
           ],
@@ -83,9 +76,7 @@ class ErrorSnackbar {
         backgroundColor: Colors.green.shade600,
         duration: duration,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }

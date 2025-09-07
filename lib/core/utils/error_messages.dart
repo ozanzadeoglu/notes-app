@@ -28,6 +28,8 @@ class ErrorMessages {
         return 'Failed to save changes. Please try again.';
       case AppError.noteDeletionFailed:
         return 'Failed to delete note. Please try again.';
+      case AppError.noteEnhanceFailed:
+        return 'Failed to enhance note. Please try again.';
       
       // Local note errors
       case AppError.localNotesGetFailed:
@@ -67,6 +69,10 @@ class ErrorMessages {
       case AppError.searchTermTooShort:
         return 'Search term is too short.';
       
+      // AI Enhancement specific
+      case AppError.enhancementTimeout:
+        return 'Enhancing took too long, please sync app in a few minutes.';
+      
       // Generic
       case AppError.unknown:
         return 'Something went wrong. Please try again.';
@@ -82,10 +88,12 @@ class ErrorMessages {
       case AppError.noteCreationFailed:
       case AppError.noteUpdateFailed:
       case AppError.noteDeletionFailed:
+      case AppError.noteEnhanceFailed:
       case AppError.localNotesGetFailed:
       case AppError.unknown:
         return true;
-        
+      
+      case AppError.enhancementTimeout:
       case AppError.unauthorized:
       case AppError.sessionExpired:
       case AppError.signInFailed:
