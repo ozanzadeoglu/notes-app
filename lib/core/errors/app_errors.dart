@@ -19,7 +19,12 @@ enum AppError {
   noteUpdateFailed,
   noteDeletionFailed,
   noteWillBeSyncedOnline,
-  
+
+  // Local note errors
+  localNotesGetFailed,
+  localNoteUpdateFailed,
+  localNoteDeletionFailed,
+
   // Sync operations
   syncFailed,
   
