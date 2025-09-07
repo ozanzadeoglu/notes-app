@@ -105,7 +105,7 @@ class SyncOrchestratorImpl implements ISyncOrchestrator {
 
       // 1. Process pending queue operations
       await _processQueue();
-      
+
       // 2. Fetch latest notes from server
       final notesUpdated = await _syncNotesFromServer();
 
@@ -129,7 +129,6 @@ class SyncOrchestratorImpl implements ISyncOrchestrator {
     switch (queueResult) {
       case Ok<List<QueueModel>>():
         final queueItems = queueResult.value;
-
         // If no queue items, return false
         if (queueItems.isEmpty) return false;
 
@@ -140,7 +139,8 @@ class SyncOrchestratorImpl implements ISyncOrchestrator {
         for (final originalItem in queueItems) {
           if (!optimizedQueue.contains(originalItem)) {
             await _queueDataSource.removeFromQueue(originalItem.queueKey);
-            hasProcessedItems = true; // Removing redundant items counts as processing
+            hasProcessedItems =
+                true; // Removing redundant items counts as processing
           }
         }
 
@@ -169,7 +169,6 @@ class SyncOrchestratorImpl implements ISyncOrchestrator {
           if (success) {
             await _queueDataSource.removeFromQueue(queueItem.queueKey);
             hasProcessedItems = true;
-          } else {
           }
         }
         break;
@@ -208,11 +207,18 @@ class SyncOrchestratorImpl implements ISyncOrchestrator {
       final hasDelete = operations.any((op) => op.operationType == 'delete');
 
       if (hasDelete) {
-        // If delete exists, only keep the latest delete operation
-        final deleteOp = operations.lastWhere(
-          (op) => op.operationType == 'delete',
-        );
-        optimizedQueue.add(deleteOp);
+        // Check if there was a create operation - if so, cancel both operations
+        final hasCreate = operations.any((op) => op.operationType == 'post');
+        if (hasCreate) {
+          // Created and deleted offline - skip both operations (note effectively never existed)
+          continue;
+        } else {
+          // Only delete operation - keep it (note existed on server)
+          final deleteOp = operations.lastWhere(
+            (op) => op.operationType == 'delete',
+          );
+          optimizedQueue.add(deleteOp);
+        }
       } else {
         // No delete operation, optimize create/update operations
         final hasPost = operations.any((op) => op.operationType == 'post');
@@ -220,7 +226,9 @@ class SyncOrchestratorImpl implements ISyncOrchestrator {
 
         if (hasPost && hasPut) {
           // Both post and put exist, keep POST first then latest PUT (server needs creation before update)
-          final postOp = operations.firstWhere((op) => op.operationType == 'post');
+          final postOp = operations.firstWhere(
+            (op) => op.operationType == 'post',
+          );
           final putOp = operations.lastWhere((op) => op.operationType == 'put');
           optimizedQueue.add(postOp);
           optimizedQueue.add(putOp);
@@ -245,13 +253,15 @@ class SyncOrchestratorImpl implements ISyncOrchestrator {
   }
 
   Future<bool> _syncNotesFromServer() async {
-    final result = await _remoteDataSource.getAllNotes(lastSyncDate: _lastSyncDate);
+    final result = await _remoteDataSource.getAllNotes(
+      lastSyncDate: _lastSyncDate,
+    );
     bool hasUpdatedNotes = false;
 
     switch (result) {
       case Ok<NotesResponse>():
         final serverNotes = result.value.notes;
-        
+
         // Always update lastSyncDate on successful response
         try {
           await _lastSyncCache.put(_lastSyncKey, result.value.lastSyncDate);
