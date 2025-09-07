@@ -10,6 +10,7 @@ abstract class RemoteNoteDataSource {
   Future<Result<void>> createNote(NoteModel note);
   Future<Result<void>> updateNote(NoteModel note);
   Future<Result<void>> deleteNote(NoteModel note);
+  Future<Result<NoteModel>> enhanceNote(String noteUuid);
 }
 
 class RemoteNoteDataSourceImpl implements RemoteNoteDataSource {
@@ -58,6 +59,18 @@ class RemoteNoteDataSourceImpl implements RemoteNoteDataSource {
         return result;
       case Error():
         return Result.error(AppError.noteDeletionFailed);
+    }
+  }
+
+  @override
+  Future<Result<NoteModel>> enhanceNote(String noteUuid) async {
+    final result = await _apiClient.enhanceNote(noteUuid);
+    switch (result) {
+      case Ok<NoteModel>():
+        return result;
+      case Error():
+        // Pass through the exact error from ApiClient (could be timeout or other failures)
+        return result;
     }
   }
 }

@@ -175,4 +175,29 @@ class NoteRepositoryImpl implements NoteRepository {
       return Result.error(AppError.noteDeletionFailed);
     }
   }
+
+  @override
+  Future<Result<Note>> enhanceNote(String noteUuid) async {
+    try {
+      if (!_connectivityService.isOnline) {
+        return Result.error(AppError.noNetworkConnection);
+      }
+
+      // Call API to enhance note - errors are passed through from ApiClient
+      final result = await _remoteDataSource.enhanceNote(noteUuid);
+      
+      switch (result) {
+        case Ok():
+          // Update local storage with enhanced note
+          final enhancedNoteModel = result.value;
+          await _localDataSource.updateNote(enhancedNoteModel);
+          return Result.ok(enhancedNoteModel.toEntity());
+        case Error():
+          // Pass through the specific error (timeout, server error, etc.)
+          return Result.error(result.error);
+      }
+    } catch (e) {
+      return Result.error(AppError.noteEnhanceFailed);
+    }
+  }
 }

@@ -13,4 +13,7 @@ abstract class NoteRepository {
   
   /// Gets all notes
   Future<Result<List<Note>>> getAllNotes();
+  
+  /// Enhances a note using AI
+  Future<Result<Note>> enhanceNote(String noteUuid);
 }
