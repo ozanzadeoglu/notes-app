@@ -107,11 +107,11 @@ class NoteRepositoryImpl implements NoteRepository {
             // Offline: Save locally + add to queue
             final localResult = await _localDataSource.updateNote(noteModel);
             if (localResult is Error) {
-              return Result.error(AppError.noteCreationFailed);
+              return Result.error(AppError.noteUpdateFailed);
             }
             final queueResult = await _queueDataSource.addToQueue(queueModel);
             if (queueResult is Error) {
-              return Result.error(AppError.noteCreationFailed);
+              return Result.error(AppError.noteUpdateFailed);
             }
             return Result.ok(null);
         }
@@ -119,11 +119,11 @@ class NoteRepositoryImpl implements NoteRepository {
         // Offline: Update locally + add to queue
         final localResult = await _localDataSource.updateNote(noteModel);
         if (localResult is Error) {
-          return Result.error(AppError.noteCreationFailed);
+          return Result.error(AppError.noteUpdateFailed);
         }
         final queueResult = await _queueDataSource.addToQueue(queueModel);
         if (queueResult is Error) {
-          return Result.error(AppError.noteCreationFailed);
+          return Result.error(AppError.noteUpdateFailed);
         }
         return Result.ok(null);
       }
@@ -151,11 +151,11 @@ class NoteRepositoryImpl implements NoteRepository {
               noteModel.uuid,
             );
             if (localResult is Error) {
-              return Result.error(AppError.noteCreationFailed);
+              return Result.error(AppError.noteDeletionFailed);
             }
             final queueResult = await _queueDataSource.addToQueue(queueModel);
             if (queueResult is Error) {
-              return Result.error(AppError.noteCreationFailed);
+              return Result.error(AppError.noteDeletionFailed);
             }
             return Result.ok(null);
         }
@@ -163,11 +163,11 @@ class NoteRepositoryImpl implements NoteRepository {
         // Offline: Remove locally + add to queue
         final localResult = await _localDataSource.deleteNote(noteModel.uuid);
         if (localResult is Error) {
-          return Result.error(AppError.noteCreationFailed);
+          return Result.error(AppError.noteDeletionFailed);
         }
         final queueResult = await _queueDataSource.addToQueue(queueModel);
         if (queueResult is Error) {
-          return Result.error(AppError.noteCreationFailed);
+          return Result.error(AppError.noteDeletionFailed);
         }
         return Result.ok(null);
       }
