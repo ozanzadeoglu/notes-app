@@ -1,3 +1,4 @@
+import 'package:connectinno_case_client/core/errors/app_errors.dart';
 import 'package:connectinno_case_client/data/network/models/notes/note_api_model.dart';
 import 'package:connectinno_case_client/data/network/models/notes/notes_response.dart';
 import 'package:dio/dio.dart';
@@ -8,15 +9,13 @@ import '../models/note/note_model.dart';
 class ApiClient {
   final AuthTokenProvider _tokenProvider;
   final Dio _dio;
-  
-  ApiClient({
-    required Dio dio,
-    required AuthTokenProvider tokenProvider,
-  }) : _dio = dio,
-       _tokenProvider = tokenProvider {
+
+  ApiClient({required Dio dio, required AuthTokenProvider tokenProvider})
+    : _dio = dio,
+      _tokenProvider = tokenProvider {
     _setupInterceptors();
   }
-  
+
   void _setupInterceptors() {
     _dio.interceptors.add(
       InterceptorsWrapper(
@@ -29,10 +28,7 @@ class ApiClient {
             }
             handler.next(options);
           } catch (e) {
-            handler.reject(DioException(
-              requestOptions: options,
-              message: 'Failed to get auth token: $e',
-            ));
+            handler.reject(DioException(requestOptions: options));
           }
         },
       ),
@@ -48,52 +44,49 @@ class ApiClient {
         queryParams['lastSyncDate'] = lastSyncDate;
       }
 
-      final response = await _dio.get(
-        'notes',
-        queryParameters: queryParams,
-      );
+      final response = await _dio.get('notes', queryParameters: queryParams);
 
       if (response.statusCode == 200) {
         final data = response.data;
         final notesJson = data['notes'] as List<dynamic>;
         final notes = notesJson
-            .map((noteJson) => NoteApiModel.fromJson(noteJson as Map<String, dynamic>))
+            .map(
+              (noteJson) =>
+                  NoteApiModel.fromJson(noteJson as Map<String, dynamic>),
+            )
             .toList();
-        
+
         final serverLastSyncDate = data['lastSyncDate'] as String;
-        
+
         final notesResponse = NotesResponse(
           notes: notes,
           lastSyncDate: serverLastSyncDate,
         );
-        
+
         return Result.ok(notesResponse);
       } else {
-        return Result.error(null);
+        return Result.error(AppError.syncFailed);
       }
-    } on DioException catch (_) {
-      return Result.error(null);
+    } on DioException catch (e) {
+      return Result.error(_handleDioException(e));
     } catch (e) {
-      return Result.error(null);
+      return Result.error(AppError.unknown);
     }
   }
 
   /// Create a new note
   Future<Result<void>> createNote(NoteModel note) async {
     try {
-      final response = await _dio.post(
-        'notes',
-        data: note.toJson(),
-      );
+      final response = await _dio.post('notes', data: note.toJson());
       if (response.statusCode == 201) {
         return Result.ok(null);
       } else {
-        return Result.error(null);
+        return Result.error(AppError.noteCreationFailed);
       }
-    } on DioException catch (_) {
-      return Result.error(null);
+    } on DioException catch (e) {
+      return Result.error(_handleDioException(e));
     } catch (e) {
-      return Result.error(null);
+      return Result.error(AppError.unknown);
     }
   }
 
@@ -108,12 +101,12 @@ class ApiClient {
       if (response.statusCode == 200) {
         return Result.ok(null);
       } else {
-        return Result.error(null);
+        return Result.error(AppError.noteUpdateFailed);
       }
-    } on DioException catch (_) {
-      return Result.error(null);
+    } on DioException catch (e) {
+      return Result.error(_handleDioException(e));
     } catch (e) {
-      return Result.error(null);
+      return Result.error(AppError.unknown);
     }
   }
 
@@ -125,35 +118,41 @@ class ApiClient {
       if (response.statusCode == 200) {
         return Result.ok(null);
       } else {
-        return Result.error(null);
+        return Result.error(AppError.noteDeletionFailed);
       }
-    } on DioException catch (_) {
-      return Result.error(null);
+    } on DioException catch (e) {
+      return Result.error(_handleDioException(e));
     } catch (e) {
-      return Result.error(null);
+      return Result.error(AppError.unknown);
     }
   }
 
-  String _handleDioError(DioException e) {
+  AppError _handleDioException(DioException e) {
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
-        return 'Connection timeout';
       case DioExceptionType.sendTimeout:
-        return 'Send timeout';
       case DioExceptionType.receiveTimeout:
-        return 'Receive timeout';
       case DioExceptionType.connectionError:
-        return 'No internet connection';
+        return AppError.noNetworkConnection;
+
       case DioExceptionType.badResponse:
-        if (e.response?.data is Map) {
-          final error = e.response?.data['error'];
-          if (error != null) return error.toString();
+        final statusCode = e.response?.statusCode;
+        if (statusCode == 404) {
+          return AppError.notFound;
         }
-        return 'Server error: ${e.response?.statusCode}';
+        if (statusCode == 401 || statusCode == 403) {
+          return AppError.unauthorized;
+        }
+        if (statusCode != null && statusCode >= 500) {
+          return AppError.serverUnavailable;
+        }
+        return AppError.unknown;
       case DioExceptionType.cancel:
-        return 'Request cancelled';
+        return AppError.requestCancelled;
+      case DioExceptionType.unknown:
       default:
-        return 'Network error: ${e.message}';
+        return AppError.unknown;
     }
   }
+
 }
