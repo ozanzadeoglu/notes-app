@@ -20,7 +20,7 @@ class NoteAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.read<NoteViewModel>();
-    
+
     return AppBar(
       backgroundColor: AppColors.background,
       elevation: 0,
@@ -29,6 +29,7 @@ class NoteAppBar extends StatelessWidget implements PreferredSizeWidget {
         onPressed: onClose,
       ),
       actions: [
+        // Dont show if new note
         if (!viewModel.isNewNote)
           Selector<NoteViewModel, bool>(
             selector: (_, vm) => vm.isLoading,
@@ -43,29 +44,37 @@ class NoteAppBar extends StatelessWidget implements PreferredSizeWidget {
                           color: AppColors.primaryText,
                         ),
                       )
-                    : const Icon(Icons.delete_forever, color: AppColors.primaryText),
+                    : const Icon(
+                        Icons.delete_forever,
+                        color: AppColors.primaryText,
+                      ),
                 onPressed: isLoading ? null : onDelete,
                 tooltip: 'Delete note',
               );
             },
           ),
-        Selector<NoteViewModel, bool>(
-          selector: (_, vm) => vm.isLoading,
-          builder: (context, isLoading, _) => IconButton(
-            icon: isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
+        // Dont show if new note
+        if (!viewModel.isNewNote)
+          Selector<NoteViewModel, bool>(
+            selector: (_, vm) => vm.isLoading,
+            builder: (context, isLoading, _) => IconButton(
+              icon: isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primaryText,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.auto_fix_high,
                       color: AppColors.primaryText,
                     ),
-                  )
-                : const Icon(Icons.auto_fix_high, color: AppColors.primaryText),
-            onPressed: isLoading ? null : onEnhance,
-            tooltip: 'Enhance with AI',
+              onPressed: isLoading ? null : onEnhance,
+              tooltip: 'Enhance with AI',
+            ),
           ),
-        ),
         Selector<NoteViewModel, bool>(
           selector: (_, vm) => vm.isLoading,
           builder: (context, isLoading, _) => IconButton(
