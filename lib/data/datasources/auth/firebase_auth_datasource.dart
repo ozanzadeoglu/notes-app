@@ -33,7 +33,7 @@ class FirebaseAuthDataSourceImpl implements FirebaseAuthDataSource {
     final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
     
     if (googleUser == null) {
-      throw Exception('Google Sign In was cancelled');
+      throw Exception('Google Sign In is cancelled');
     }
 
     final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
