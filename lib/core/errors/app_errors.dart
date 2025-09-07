@@ -18,6 +18,7 @@ enum AppError {
   noteCreationFailed,
   noteUpdateFailed,
   noteDeletionFailed,
+  noteEnhanceFailed,
 
   // Local note errors
   localNotesGetFailed,
@@ -43,6 +44,9 @@ enum AppError {
   // Search specific
   noOfflineSearch,
   searchTermTooShort,
+  
+  // AI Enhancement specific
+  enhancementTimeout,
   
   // Generic
   unknown,
