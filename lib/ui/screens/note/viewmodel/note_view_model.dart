@@ -85,7 +85,6 @@ class NoteViewModel extends ChangeNotifier {
 
       return result;
     } catch (e) {
-      debugPrint('❌ Save note error: $e');
       _setError(AppError.noteUpdateFailed);
       return false;
     } finally {
@@ -94,30 +93,24 @@ class NoteViewModel extends ChangeNotifier {
   }
 
   Future<bool> _createNewNote(Note note) async {
-    debugPrint('🟢 Creating new note: ${note.uuid}');
     final result = await _noteRepository.createNote(note);
     
     switch (result) {
       case Ok():
-        debugPrint('✅ Created note: ${note.uuid}');
         return true;
       case Error():
-        debugPrint('❌ Failed to create note: ${result.error}');
         _setError(AppError.noteCreationFailed);
         return false;
     }
   }
 
   Future<bool> _updateExistingNote(Note note) async {
-    debugPrint('🟡 Updating note: ${note.uuid}');
     final result = await _noteRepository.editNote(note);
     
     switch (result) {
       case Ok():
-        debugPrint('✅ Updated note: ${note.uuid}');
         return true;
       case Error():
-        debugPrint('❌ Failed to update note: ${result.error}');
         _setError(AppError.noteUpdateFailed);
         return false;
     }
@@ -132,20 +125,16 @@ class NoteViewModel extends ChangeNotifier {
     _clearError();
 
     try {
-      debugPrint('🔴 Deleting note: ${_originalNote.uuid}');
       final result = await _noteRepository.removeNote(_originalNote);
       
       switch (result) {
         case Ok():
-          debugPrint('✅ Deleted note: ${_originalNote.uuid}');
           return true;
         case Error():
-          debugPrint('❌ Failed to delete note: ${result.error}');
           _setError(AppError.noteDeletionFailed);
           return false;
       }
     } catch (e) {
-      debugPrint('❌ Delete note error: $e');
       _setError(AppError.noteDeletionFailed);
       return false;
     } finally {
@@ -166,6 +155,32 @@ class NoteViewModel extends ChangeNotifier {
   void clearError() {
     _errorMessage = null;
     notifyListeners();
+  }
+
+  Future<bool> enhanceNote() async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final result = await _noteRepository.enhanceNote(_originalNote.uuid);
+      
+      switch (result) {
+        case Ok():
+          // Update controllers with enhanced content
+          final enhancedNote = result.value;
+          _titleController.text = enhancedNote.title;
+          _contentController.text = enhancedNote.content;
+          return true;
+        case Error():
+          _setError(result.error ?? AppError.noteEnhanceFailed);
+          return false;
+      }
+    } catch (e) {
+      _setError(AppError.noteEnhanceFailed);
+      return false;
+    } finally {
+      _setLoading(false);
+    }
   }
 
   void _clearError() {

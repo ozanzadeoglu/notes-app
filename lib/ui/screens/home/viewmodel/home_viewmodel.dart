@@ -39,7 +39,6 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   void _onSyncTriggered() {
-    debugPrint('🔄 Sync triggered, refreshing notes from local cache');
     _loadNotes();
   }
 
@@ -48,13 +47,10 @@ class HomeViewModel extends ChangeNotifier {
     
     switch (result) {
       case Ok():
-        final previousCount = _notes.length;
         _notes = result.value;
         _error = null;
-        debugPrint('📱 Loaded ${_notes.length} notes from cache (was $previousCount)');
         break;
       case Error():
-        debugPrint('❌ Failed to load notes from cache');
         _error = result.error;
         break;
     }
@@ -66,11 +62,8 @@ class HomeViewModel extends ChangeNotifier {
     _error = null; // Clear any existing errors
     
     try {
-      debugPrint('🔄 Triggering manual sync...');
       await _syncOrchestrator.triggerSync();
-      debugPrint('🔄 Manual sync completed');
     } catch (e) {
-      debugPrint('❌ Manual sync failed: $e');
       _error = AppError.syncFailed;
     } finally {
       _setLoading(false);
@@ -79,7 +72,6 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Future<void> refreshNotes() async {
-    debugPrint('🔄 Refreshing notes from local cache');
     await _loadNotes();
   }
 

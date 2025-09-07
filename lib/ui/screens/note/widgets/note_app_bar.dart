@@ -7,12 +7,14 @@ class NoteAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onSave;
   final VoidCallback? onDelete;
   final VoidCallback? onClose;
+  final VoidCallback? onEnhance;
 
   const NoteAppBar({
     super.key,
     this.onSave,
     this.onDelete,
     this.onClose,
+    this.onEnhance,
   });
 
   @override
@@ -47,6 +49,23 @@ class NoteAppBar extends StatelessWidget implements PreferredSizeWidget {
               );
             },
           ),
+        Selector<NoteViewModel, bool>(
+          selector: (_, vm) => vm.isLoading,
+          builder: (context, isLoading, _) => IconButton(
+            icon: isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primaryText,
+                    ),
+                  )
+                : const Icon(Icons.auto_fix_high, color: AppColors.primaryText),
+            onPressed: isLoading ? null : onEnhance,
+            tooltip: 'Enhance with AI',
+          ),
+        ),
         Selector<NoteViewModel, bool>(
           selector: (_, vm) => vm.isLoading,
           builder: (context, isLoading, _) => IconButton(
