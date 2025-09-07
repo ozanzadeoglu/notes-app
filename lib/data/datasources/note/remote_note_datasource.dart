@@ -1,3 +1,4 @@
+import 'package:connectinno_case_client/core/errors/app_errors.dart';
 import 'package:connectinno_case_client/core/utils/result.dart';
 import 'package:connectinno_case_client/data/models/note/note_model.dart';
 import 'package:connectinno_case_client/data/network/api_client.dart';
@@ -18,21 +19,45 @@ class RemoteNoteDataSourceImpl implements RemoteNoteDataSource {
 
   @override
   Future<Result<NotesResponse>> getAllNotes({String? lastSyncDate}) async {
-    return _apiClient.getNotes(lastSyncDate: lastSyncDate);
+    final result = await _apiClient.getNotes(lastSyncDate: lastSyncDate);
+    switch (result) {
+      case Ok<NotesResponse>():
+        return result;
+      case Error():
+        return Result.error(AppError.syncFailed);
+    }
   }
 
   @override
   Future<Result<void>> createNote(NoteModel note) async {
-    return _apiClient.createNote(note);
+    final result = await _apiClient.createNote(note);
+    switch (result) {
+      case Ok<void>():
+        return result;
+      case Error():
+        return Result.error(AppError.noteCreationFailed);
+    }
   }
 
   @override
   Future<Result<void>> updateNote(NoteModel note) async {
-    return _apiClient.updateNote( note);
+    final result = await _apiClient.updateNote(note);
+    switch (result) {
+      case Ok<void>():
+        return result;
+      case Error():
+        return Result.error(AppError.noteUpdateFailed);
+    }
   }
 
   @override
   Future<Result<void>> deleteNote(NoteModel note) async {
-    return _apiClient.deleteNote(note);
+    final result = await _apiClient.deleteNote(note);
+    switch (result) {
+      case Ok<void>():
+        return result;
+      case Error():
+        return Result.error(AppError.noteDeletionFailed);
+    }
   }
 }
