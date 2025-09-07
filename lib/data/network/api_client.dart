@@ -127,6 +127,23 @@ class ApiClient {
     }
   }
 
+  Future<Result<NoteModel>> enhanceNote(String noteUuid) async {
+    try {
+      final response = await _dio.post('notes/$noteUuid/enhance');
+
+      if (response.statusCode == 200) {
+        final noteModel = NoteModel.fromJson(response.data);
+        return Result.ok(noteModel);
+      } else {
+        return Result.error(AppError.noteEnhanceFailed);
+      }
+    } on DioException catch (e) {
+      return Result.error(_handleEnhanceException(e));
+    } catch (e) {
+      return Result.error(AppError.unknown);
+    }
+  }
+
   AppError _handleDioException(DioException e) {
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
@@ -152,6 +169,36 @@ class ApiClient {
       case DioExceptionType.unknown:
       default:
         return AppError.unknown;
+    }
+  }
+
+  AppError _handleEnhanceException(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return AppError.enhancementTimeout;
+
+      case DioExceptionType.connectionError:
+        return AppError.noNetworkConnection;
+
+      case DioExceptionType.badResponse:
+        final statusCode = e.response?.statusCode;
+        if (statusCode == 404) {
+          return AppError.notFound;
+        }
+        if (statusCode == 401 || statusCode == 403) {
+          return AppError.unauthorized;
+        }
+        if (statusCode != null && statusCode >= 500) {
+          return AppError.noteEnhanceFailed;
+        }
+        return AppError.noteEnhanceFailed;
+      case DioExceptionType.cancel:
+        return AppError.requestCancelled;
+      case DioExceptionType.unknown:
+      default:
+        return AppError.noteEnhanceFailed;
     }
   }
 
