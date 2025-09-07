@@ -1,3 +1,4 @@
+import 'package:connectinno_case_client/core/errors/app_errors.dart';
 import '../../../core/connectivity/i_connectivity_service.dart';
 import '../../../core/utils/result.dart';
 import '../../../domain/entities/note/note.dart';
@@ -36,10 +37,10 @@ class NoteRepositoryImpl implements NoteRepository {
               .toList();
           return Result.ok(notes);
         case Error():
-          return Result.error(null);
+          return Result.error(localNotes.error);
       }
     } catch (e) {
-      return Result.error(null);
+      return Result.error(AppError.unknown);
     }
   }
 
@@ -51,26 +52,38 @@ class NoteRepositoryImpl implements NoteRepository {
       if (_connectivityService.isOnline) {
         // Online: API call first
         final result = await _remoteDataSource.createNote(noteModel);
-
         // If result is Ok, only save to notes
         switch (result) {
           case Ok():
-            await _localDataSource.saveNote(noteModel);
+            await _localDataSource.updateNote(noteModel);
             return Result.ok(null);
           // If result is Error, save it to both notes and queues
+
           case Error():
-            await _localDataSource.saveNote(noteModel);
-            await _queueDataSource.addToQueue(queueModel);
+            final localResult = await _localDataSource.updateNote(noteModel);
+            if (localResult is Error) {
+              return Result.error(AppError.noteCreationFailed);
+            }
+            final queueResult = await _queueDataSource.addToQueue(queueModel);
+            if (queueResult is Error) {
+              return Result.error(AppError.noteCreationFailed);
+            }
             return Result.ok(null);
         }
       } else {
         // Offline: Save locally + add to queue
-        await _localDataSource.saveNote(noteModel);
-        await _queueDataSource.addToQueue(queueModel);
+        final localResult = await _localDataSource.updateNote(noteModel);
+        if (localResult is Error) {
+          return Result.error(AppError.noteCreationFailed);
+        }
+        final queueResult = await _queueDataSource.addToQueue(queueModel);
+        if (queueResult is Error) {
+          return Result.error(AppError.noteCreationFailed);
+        }
         return Result.ok(null);
       }
     } catch (e) {
-      return Result.error(null);
+      return Result.error(AppError.noteCreationFailed);
     }
   }
 
@@ -91,18 +104,31 @@ class NoteRepositoryImpl implements NoteRepository {
             return Result.ok(null);
           // If result is Error, add both to notes and queue
           case Error():
-            await _localDataSource.updateNote(noteModel);
-            await _queueDataSource.addToQueue(queueModel);
-            return Result.error(null);
+            // Offline: Save locally + add to queue
+            final localResult = await _localDataSource.updateNote(noteModel);
+            if (localResult is Error) {
+              return Result.error(AppError.noteCreationFailed);
+            }
+            final queueResult = await _queueDataSource.addToQueue(queueModel);
+            if (queueResult is Error) {
+              return Result.error(AppError.noteCreationFailed);
+            }
+            return Result.ok(null);
         }
       } else {
         // Offline: Update locally + add to queue
-        await _localDataSource.updateNote(noteModel);
-        await _queueDataSource.addToQueue(queueModel);
+        final localResult = await _localDataSource.updateNote(noteModel);
+        if (localResult is Error) {
+          return Result.error(AppError.noteCreationFailed);
+        }
+        final queueResult = await _queueDataSource.addToQueue(queueModel);
+        if (queueResult is Error) {
+          return Result.error(AppError.noteCreationFailed);
+        }
         return Result.ok(null);
       }
     } catch (e) {
-      return Result.error(null);
+      return Result.error(AppError.noteUpdateFailed);
     }
   }
 
@@ -121,19 +147,32 @@ class NoteRepositoryImpl implements NoteRepository {
             await _localDataSource.deleteNote(noteModel.uuid);
             return Result.ok(null);
           case Error():
-            await _localDataSource.deleteNote(noteModel.uuid);
-            await _queueDataSource.addToQueue(queueModel);
-            // Shouldn't care.
+            final localResult = await _localDataSource.deleteNote(
+              noteModel.uuid,
+            );
+            if (localResult is Error) {
+              return Result.error(AppError.noteCreationFailed);
+            }
+            final queueResult = await _queueDataSource.addToQueue(queueModel);
+            if (queueResult is Error) {
+              return Result.error(AppError.noteCreationFailed);
+            }
             return Result.ok(null);
         }
       } else {
         // Offline: Remove locally + add to queue
-        await _localDataSource.deleteNote(noteModel.uuid);
-        await _queueDataSource.addToQueue(queueModel);
+        final localResult = await _localDataSource.deleteNote(noteModel.uuid);
+        if (localResult is Error) {
+          return Result.error(AppError.noteCreationFailed);
+        }
+        final queueResult = await _queueDataSource.addToQueue(queueModel);
+        if (queueResult is Error) {
+          return Result.error(AppError.noteCreationFailed);
+        }
         return Result.ok(null);
       }
     } catch (e) {
-      return Result.error(null);
+      return Result.error(AppError.noteDeletionFailed);
     }
   }
 }
