@@ -11,6 +11,17 @@ enum AppError {
   // Authentication & Authorization
   unauthorized,
   sessionExpired,
+  signInFailed,
+  signOutFailed,
+  
+  // Note operations
+  noteCreationFailed,
+  noteUpdateFailed,
+  noteDeletionFailed,
+  noteWillBeSyncedOnline,
+  
+  // Sync operations
+  syncFailed,
   
   // Data related
   notFound,
