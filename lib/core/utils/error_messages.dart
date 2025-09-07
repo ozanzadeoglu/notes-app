@@ -76,6 +76,9 @@ class ErrorMessages {
       // Generic
       case AppError.unknown:
         return 'Something went wrong. Please try again.';
+
+      case AppError.noteMustHaveTitle:
+        return "Notes must have a title, please create a title.";
     }
   }
   
@@ -93,6 +96,7 @@ class ErrorMessages {
       case AppError.unknown:
         return true;
       
+      case AppError.noteMustHaveTitle:
       case AppError.enhancementTimeout:
       case AppError.unauthorized:
       case AppError.sessionExpired:

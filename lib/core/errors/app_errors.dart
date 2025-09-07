@@ -19,6 +19,7 @@ enum AppError {
   noteUpdateFailed,
   noteDeletionFailed,
   noteEnhanceFailed,
+  noteMustHaveTitle,
 
   // Local note errors
   localNotesGetFailed,

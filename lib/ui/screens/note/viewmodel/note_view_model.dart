@@ -20,8 +20,8 @@ class NoteViewModel extends ChangeNotifier {
     required NoteRepository noteRepository,
     required Note? note,
     required bool isNewNote,
-  })  : _noteRepository = noteRepository,
-        _isNewNote = isNewNote {
+  }) : _noteRepository = noteRepository,
+       _isNewNote = isNewNote {
     _originalNote = note ?? _createEmptyNote();
     _initializeControllers();
   }
@@ -72,7 +72,7 @@ class NoteViewModel extends ChangeNotifier {
 
     try {
       final updatedNote = _buildUpdatedNote();
-      
+
       // Don't save if note is empty
       if (updatedNote.title.isEmpty && updatedNote.content.isEmpty) {
         _setLoading(false);
@@ -93,8 +93,12 @@ class NoteViewModel extends ChangeNotifier {
   }
 
   Future<bool> _createNewNote(Note note) async {
+    if (note.title.isEmpty) {
+      _setError(AppError.noteMustHaveTitle);
+      return false;
+    }
     final result = await _noteRepository.createNote(note);
-    
+
     switch (result) {
       case Ok():
         return true;
@@ -105,8 +109,12 @@ class NoteViewModel extends ChangeNotifier {
   }
 
   Future<bool> _updateExistingNote(Note note) async {
+    if (note.title.isEmpty) {
+      _setError(AppError.noteMustHaveTitle);
+      return false;
+    }
     final result = await _noteRepository.editNote(note);
-    
+
     switch (result) {
       case Ok():
         return true;
@@ -126,7 +134,7 @@ class NoteViewModel extends ChangeNotifier {
 
     try {
       final result = await _noteRepository.removeNote(_originalNote);
-      
+
       switch (result) {
         case Ok():
           return true;
@@ -158,12 +166,18 @@ class NoteViewModel extends ChangeNotifier {
   }
 
   Future<bool> enhanceNote() async {
+    if (_originalNote.title.isEmpty || _originalNote.content.isEmpty) {
+      // Dont have time to create a specific error.
+      _setError(AppError.noteMustHaveTitle);
+      return false;
+    }
+
     _setLoading(true);
     _clearError();
 
     try {
       final result = await _noteRepository.enhanceNote(_originalNote.uuid);
-      
+
       switch (result) {
         case Ok():
           // Update controllers with enhanced content
