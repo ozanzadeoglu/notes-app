@@ -4,6 +4,14 @@ A Flutter-based note-taking application with offline-first architecture, cloud s
 
 <img width="2944" height="1600" alt="Adsız tasarım (6)" src="https://github.com/user-attachments/assets/8803c378-bc8e-44d9-82f3-9fb535c825f4" />
 
+### Button functionalities(Note View):
+
+#### From left to right:
+Close screen(returns to home view), delete note, enhance with ai, save note.
+
+![buttons](https://github.com/user-attachments/assets/fb38322d-1876-4d73-b6b9-e04be4dcb724)
+
+
 
 ## Features
 
@@ -12,7 +20,7 @@ A Flutter-based note-taking application with offline-first architecture, cloud s
 - **Google Authentication**: Secure sign-in with Google accounts
 - **Offline-First Architecture**: Full functionality without internet connection(except AI enhancement)
 - **Real-time Synchronization**: Automatic sync when connectivity is restored
-- **AI Enhancement**: Improve note content using AI-powered suggestions
+- **AI Enhancement**: Improve note content using AI.
 - **Smart Queue System**: Optimized offline operations queue with conflict resolution
 
 ### Technical Features
@@ -22,7 +30,7 @@ A Flutter-based note-taking application with offline-first architecture, cloud s
 - **Connectivity Awareness**: Real-time network status monitoring
 - **Queue Optimization**: Smart merging of offline operations before sync
 
-## 🏗️ Architecture
+## Architecture
 
 ### Clean Architecture Layers
 
@@ -50,19 +58,82 @@ lib/
     └── utils/        # Utility classes
 ```
 
-### Key Components
+#### **Domain Layer** (`lib/domain/`)
+- **Purpose**: Contains business logic and rules
+- **Components**:
+  - `entities/`: Pure data models (`Note`, `UserEntity`)
+  - `repositories/`: Abstract interfaces defining contracts
 
-**Sync Orchestrator**: Manages offline-online synchronization with intelligent queue optimization
+#### **Data Layer** (`lib/data/`)
+- **Purpose**: Implements data operations and external service integrations
+- **Components**:
+  - `datasources/`: Concrete implementations for local and remote data access
+  - `models/`: Data transfer objects with serialization (`NoteModel`, `QueueModel`)
+  - `repositories/`: Repository implementations coordinating between data sources
+  - `services/`: Business services, SyncOrchestratorImpl
+  - `network/`: API client with interceptor-based authentication, takes authorization token from another interface, has api response models.
+- **Key Design Decision**: Dual data source strategy (local + remote) with automatic fallback
+
+#### **Presentation Layer** (`lib/ui/`)
+- **Purpose**: User interface and interaction handling
+- **Components**:
+  - `screens/`: Feature-based organization with ViewModels
+  - `common/`: Reusable UI components (error states, banners)
+
+### Dependency Injection Strategy
+
+The application uses Provider for dependency injection in main.dart:
+
+```dart
+MultiProvider(
+  providers: [
+    // 1. Core Services (Connectivity)
+    // 2. Cache Services (Hive boxes)
+    // 3. Authentication Services
+    // 4. API Client with token injection
+    // 5. Data Sources (local and remote)
+    // 6. Repositories
+    // 7. Sync Orchestrator
+  ]
+)
+```
+
+**About Dependency Injection**:
+- Dependencies are registered in order of their requirements
+- `Provider` is used for singletons and `ChangeNotifierProvider` for reactive components
+
+### Offline-First Architecture
+
+Every operation is first done locally, and then added to queue or send to backend depending on connectivity status. Displayed notes are never fetched from server. Cached notes are
+single source of truth on UI. After a sync operation, if there are new notes, UI gets a notification to fetch notes from local database again.
+
+### **Queue System**
+App has a queue system for offline operations. Every offline operation is recorded to Queue cache to be processed by SyncOrchestrator when certain conditions are met
+like connectivity status.
+
+```dart
+QueueModel {
+  NoteModel note;
+  String operationType; // "post", "put", "delete"
+  String queueKey => '${note.uuid}_$operationType';
+}
+```
+
+**Queue Optimization Algorithm** (in `SyncOrchestratorImpl`):
+1. **Redundancy Elimination**: Create + Delete = No operation
+2. **Operation Merging**: Multiple updates keep only the latest(new update overrides last update on same note.)
+3. **Chronological Processing**: Maintains operation order for consistency
+
+#### **Sync Orchestrator**
+Central coordinator for data synchronization:
+- Process queued operations
 - Sync's with database whenever user's authentication state or connectivity state changes(both must be true)
-- Handles operations on Queue(CRUD operations done while app is offline)
-- Merges redundant operations (create+delete = no-op)
-- Holds a lastSyncDate(key to incremental sync), to send to backend. lastSyncDate differs from client to client.
-- Handles deleted notes(if deleted from a different device)
+- Holds a lastSyncDate(key to incremental sync), to send to backend. lastSyncDate differs from client to client, updated after every sync, and returned by backend.
+- Fetch server changes (incremental using `lastSyncDate`, doesn't need to get all notes, unless user opens app from a new client.)
+- Handles deleted notes(server wins for deletions, if a response note has a isDeleted: true field, remove from local too.)
+- Notify UI to fetch updated cache(only if changes occurred)
 
-**Repository Pattern**: Abstracts data access with unified interface
-- Switches between local and remote data sources
-- Handles offline queueing automatically
-- Provides Result type for error handling
+
 
 ## 🛠️ Technology Stack
 
@@ -76,20 +147,13 @@ lib/
 - **Freezed**: Immutable data classes with code generation
 
 ### State Management & Navigation
-- **Provider**: State management solution
-- **Go Router**: Declarative routing
+- **Provider**: State management and Dependency Injection
+- **Go Router**: Routing
 
 ### Networking & Connectivity
 - **Dio**: HTTP client for API calls
 - **Connectivity Plus**: Network status monitoring
 
-## 📱 How It Works
-
-### Offline-First Architecture
-1. **Local-First Operations**: All CRUD operations work locally first
-2. **Queue System**: Failed network operations are queued for later sync
-3. **Smart Sync**: When online, queued operations are optimized and synchronized
-4. **Conflict Resolution**: Intelligent merging of offline operations
 
 ### Data Flow
 ```
@@ -98,21 +162,7 @@ User Action → ViewModel → Repository → Local Storage
                                      → Remote API (if online)
 ```
 
-### AI Enhancement Feature
-1. User selects "Enhance" option in note view
-2. System sends note UUID to backend AI service
-3. Backend processes note content with AI
-4. Enhanced content is returned and updated locally
-5. User sees improved note content with success feedback
-6. If operation takes too long an request gets timed out by dio, returns a custom error message that tells user to sync in a minute.
-
-### Sync Optimization
-- **Create + Delete**: Operations cancel each other (no server calls)
-- **Create + Updates**: Single create with final content
-- **Multiple Updates**: Only latest update is synchronized
-- **Network-Aware**: Automatic sync when connectivity returns
-
-## 🚦 Getting Started
+## Getting Started
 
 
 ### Firebase Setup
