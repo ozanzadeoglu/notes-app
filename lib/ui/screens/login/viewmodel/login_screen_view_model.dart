@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../../../../domain/repositories/auth_repository.dart';
+import '../../../../domain/repositories/auth/auth_repository.dart';
 
 enum LoginState {
   initial,
@@ -29,7 +29,7 @@ class LoginScreenViewModel extends ChangeNotifier {
       await _authRepository.signInWithGoogle();
       _state = LoginState.success;
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = e.toString().replaceFirst("Exception: ", "");
       _state = LoginState.error;
     }
     notifyListeners();
