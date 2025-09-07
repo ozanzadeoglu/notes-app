@@ -2,6 +2,9 @@
 
 A Flutter-based note-taking application with offline-first architecture, cloud synchronization, and AI-powered content enhancement.
 
+<img width="2944" height="1600" alt="4" src="https://github.com/user-attachments/assets/9200aebd-38f0-4914-a5a5-65db38b04a99" />
+
+
 ## Features
 
 ### Core Functionality
