@@ -1,31 +1,37 @@
+import 'package:connectinno_case_client/data/services/i_sync_orchestrator.dart';
+import 'package:connectinno_case_client/domain/repositories/note/note_repository.dart';
+import 'package:connectinno_case_client/ui/screens/home/viewmodel/home_viewmodel.dart';
+import 'package:connectinno_case_client/ui/screens/note/note_view.dart';
+import 'package:connectinno_case_client/ui/screens/note/viewmodel/note_view_model.dart';
+import 'package:connectinno_case_client/domain/entities/note/note.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../ui/screens/login/login_screen.dart';
 import '../../ui/screens/home/home_screen.dart';
 import '../../ui/screens/login/viewmodel/login_screen_view_model.dart';
-import '../../domain/repositories/auth_repository.dart';
+import '../../domain/repositories/auth/auth_repository.dart';
 
 class AppRouter {
   static GoRouter router(AuthRepository authRepository) {
     return GoRouter(
-      initialLocation: '/login',
+      initialLocation: '/splash',
       redirect: (context, state) {
         final isAuthenticated = authRepository.isAuthenticated;
         final isInitialized = authRepository.isInitialized;
-        final isLoginRoute = state.matchedLocation == '/login';
-        
-        // Wait for auth state to be initialized
+        final currentLocation = state.matchedLocation;
+
         if (!isInitialized) {
-          return null;
+          return '/splash';
         }
-        
-        if (isAuthenticated && isLoginRoute) {
+
+        if (isAuthenticated &&
+            (currentLocation == '/login' || currentLocation == '/splash')) {
           return '/home';
-        } else if (!isAuthenticated && !isLoginRoute) {
+        } else if (!isAuthenticated && currentLocation != '/login') {
           return '/login';
         }
-        
+
         return null;
       },
       refreshListenable: authRepository,
@@ -33,17 +39,49 @@ class AppRouter {
         GoRoute(
           path: '/login',
           name: 'login',
-          builder: (context, state) => ChangeNotifierProvider(
-            create: (context) => LoginScreenViewModel(
-              context.read<AuthRepository>(),
+          pageBuilder: (context, state) => NoTransitionPage(
+            child: ChangeNotifierProvider(
+              create: (context) =>
+                  LoginScreenViewModel(context.read<AuthRepository>()),
+              child: const LoginScreen(),
             ),
-            child: const LoginScreen(),
           ),
         ),
         GoRoute(
           path: '/home',
           name: 'home',
-          builder: (context, state) => const HomeScreen(),
+          pageBuilder: (context, state) => NoTransitionPage(
+            child: ChangeNotifierProvider(
+              create: (context) => HomeViewModel(
+                noteRepository: context.read<NoteRepository>(),
+                syncOrchestrator: context.read<ISyncOrchestrator>(),
+              ),
+              child: const HomeScreen(),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/note',
+          name: 'note',
+          builder: (context, state) {
+            final noteExtra = state.extra as Map<String, dynamic>?;
+            final note = noteExtra?['note'] as Note?;
+            final isNew = noteExtra?['isNew'] as bool? ?? false;
+
+            return ChangeNotifierProvider(
+              create: (context) => NoteViewModel(
+                noteRepository: context.read<NoteRepository>(),
+                note: note,
+                isNewNote: isNew,
+              ),
+              child: const NoteView(),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/splash',
+          name: 'splash',
+          builder: (context, state) => const Scaffold(),
         ),
       ],
       errorBuilder: (context, state) => Scaffold(
@@ -51,11 +89,7 @@ class AppRouter {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red,
-              ),
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
               Text(
                 'Page not found',
