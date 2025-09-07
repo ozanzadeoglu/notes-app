@@ -48,6 +48,8 @@ class HomeViewModel extends ChangeNotifier {
     switch (result) {
       case Ok():
         _notes = result.value;
+        // Sort by updatedAt in historical order.
+        _notes.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
         _error = null;
         break;
       case Error():
